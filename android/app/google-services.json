@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "109692840416",
+    "project_id": "chat-app-pankaj",
+    "storage_bucket": "chat-app-pankaj.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109692840416:android:d5fc9823e20cda812e2385",
+        "android_client_info": {
+          "package_name": "com.pankajkcodes.flutterchatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "109692840416-g5tm9mjivhf0pl2kvltfv36le6qqgi11.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADfBjQPFkTZi2KvByLsAhMvTu8YvZXpYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "109692840416-g5tm9mjivhf0pl2kvltfv36le6qqgi11.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
