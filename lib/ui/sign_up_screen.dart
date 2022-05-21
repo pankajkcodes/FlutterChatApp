@@ -7,6 +7,8 @@ import 'package:flutterchatapp/ui/profile_screen.dart';
 import 'package:flutterchatapp/ui/sign_in_screen.dart';
 import 'package:flutterchatapp/utils/snackbar.dart';
 
+import '../utils/dialog.dart';
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
@@ -25,6 +27,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String cPassword = cPasswordController.text.trim();
     if (email.isEmpty || password.isEmpty || cPassword.isEmpty) {
       showSnackBar(context, "Can't be Empty!");
+      showAlertDialog(
+          context, "Can't be Empty!", "Please fill all the fields!");
     } else if (password != cPassword) {
       showSnackBar(context, "Password not matched!");
     } else {
@@ -34,6 +38,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void signUp(String email, String password) async {
     UserCredential? credential;
+    showLoadingDialog(context, "Creating Account");
+
     try {
       credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -42,14 +48,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         showSnackBar(context, 'The password provided is too weak.');
+        Navigator.pop(context);
+        showAlertDialog(context, "Weak Password", "Weak Password");
       } else if (e.code == 'email-already-in-use') {
         showSnackBar(context, 'The account already exists for that email.');
+        Navigator.pop(context);
+        showAlertDialog(context, "Already Exists", "The account already exists for that email.");
       }
     } catch (e) {
       showSnackBar(context, e.toString());
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return const SignInScreen();
       }));
+      Navigator.pop(context);
+      showAlertDialog(context, "An Error Occurred",e.toString());
     }
 
     if (credential != null) {
@@ -61,7 +73,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           .doc(uid)
           .set(newModel.toMap())
           .then((value) => showSnackBar(context, "Successfully Signed Up !"));
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
         return ProfileScreen(
             userModel: newModel, firebaseUser: credential!.user!);
       }));

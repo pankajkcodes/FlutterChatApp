@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       log("Data uploaded!");
       showSnackBar(context, "Data uploaded!");
 
-      // Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.popUntil(context, (route) => route.isFirst);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) {

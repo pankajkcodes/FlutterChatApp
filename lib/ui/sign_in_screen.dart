@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterchatapp/ui/home_screen.dart';
 import 'package:flutterchatapp/ui/sign_up_screen.dart';
+import 'package:flutterchatapp/utils/dialog.dart';
 
 import '../models/user_model.dart';
 import '../utils/snackbar.dart';
@@ -25,6 +26,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       showSnackBar(context, "Can't be Empty!");
+      showAlertDialog(context, "Can't be Empty!", "Please fill all the fields!");
     } else {
       signIn(email, password);
     }
@@ -32,14 +34,27 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void signIn(String email, String password) async {
     UserCredential? credential;
+
+    showLoadingDialog(context, "loading...");
+
     try {
       credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         showSnackBar(context, 'No user found for that email.');
+        // For close the loading dialog
+        Navigator.pop(context);
+        // For Show Alert dialog
+        showAlertDialog(context, "An error occurred", e.code.toString());
       } else if (e.code == 'wrong-password') {
         showSnackBar(context, 'Wrong password provided for that user.');
+
+        // For close the loading dialog
+        Navigator.pop(context);
+        // For Show Alert dialog
+        showAlertDialog(context, "An error occurred", e.code.toString());
+
       }
     }
     if (credential != null) {
@@ -51,8 +66,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
       // Go to home
       showSnackBar(context, "Successfully Logged In");
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return HomeScreen(firebaseUser: credential!.user!,userModel: userModel,);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+        return HomeScreen(
+          firebaseUser: credential!.user!,
+          userModel: userModel,
+        );
       }));
     }
   }

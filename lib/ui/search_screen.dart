@@ -1,15 +1,23 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutterchatapp/ui/chat_room_screen.dart';
+import 'package:flutterchatapp/models/chat_room_model.dart';
+import 'package:flutterchatapp/utils/constants.dart';
+
 import '../models/user_model.dart';
+import 'chat_room_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   final UserModel userModel;
   final User firebaseUser;
+
   const SearchScreen({
-    Key? key, required this.userModel, required this.firebaseUser,
+    Key? key,
+    required this.userModel,
+    required this.firebaseUser,
   }) : super(key: key);
 
   @override
@@ -18,6 +26,45 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   TextEditingController searchController = TextEditingController();
+
+  Future<ChatRoomModel?> getChatRoomModel(UserModel targetUser) async {
+    ChatRoomModel? chatRoom;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection("chatroom")
+        .where("participants.${widget.userModel.uid}", isEqualTo: true)
+        .where("participants.${targetUser.uid}", isEqualTo: true)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      // Fetch Existing Chat Room
+      var docData = snapshot.docs[0].data();
+      ChatRoomModel existingChatRoom =
+          ChatRoomModel.fromMap(docData as Map<String, dynamic>);
+      chatRoom = existingChatRoom;
+
+      log("Chat Room already Created");
+    } else {
+      // Create New Chat Room
+      log("Chat Room Created");
+
+      ChatRoomModel newChatRoom = ChatRoomModel(
+          chatRoomId: Constants.uniqueId,
+          lastMessage: "",
+          participants: {
+            widget.userModel.uid.toString(): true,
+            targetUser.uid.toString(): true
+          });
+
+      await FirebaseFirestore.instance
+          .collection("chatroom")
+          .doc(newChatRoom.chatRoomId)
+          .set(newChatRoom.toMap());
+
+      chatRoom = newChatRoom;
+    }
+    return chatRoom;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,24 +109,25 @@ class _SearchScreenState extends State<SearchScreen> {
 
                           return ListTile(
                             onTap: () async {
-                          //    ChatRoomModel? chatroomModel = await getChatroomModel(searchedUser);
+                              ChatRoomModel? chatroomModel =
+                                  await getChatRoomModel(searchedUser);
 
-                              // if(chatroomModel != null) {
+                              if(chatroomModel != null) {
                                 Navigator.pop(context);
                                 Navigator.push(context, MaterialPageRoute(
                                     builder: (context) {
-                                      return const ChatRoomScreen(
-                                        // targetUser: searchedUser,
-                                        // userModel: widget.userModel,
-                                        // firebaseUser: widget.firebaseUser,
-                                        // chatroom: chatroomModel,
+                                      return ChatRoomScreen(
+                                        targetUser: searchedUser,
+                                        userModel: widget.userModel,
+                                        firebaseUser: widget.firebaseUser,
+                                       chatRoomModel: chatroomModel,
                                       );
                                     }
                                 ));
-                              // }
+                              }
                             },
                             leading: CircleAvatar(
-                             // backgroundImage: NetworkImage(searchedUser.profilepic!),
+                              backgroundImage: NetworkImage(searchedUser.profilePic!),
                               backgroundColor: Colors.grey[500],
                             ),
                             title: Text(searchedUser.name!),
@@ -90,7 +138,6 @@ class _SearchScreenState extends State<SearchScreen> {
                         else {
                           return const Text("No results found!");
                         }
-
                       }
                       else if(snapshot.hasError) {
                         return const Text("An error occurred!");
